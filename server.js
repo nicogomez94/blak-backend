@@ -13,7 +13,13 @@ dotenv.config();
 const API_URL = "https://blak-backend.onrender.com";
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://blak-frontend.onrender.com", // Reemplaza con el dominio de tu frontend
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 const client = new MercadoPagoConfig({ accessToken: "APP_USR-7045728362832938-040422-b215197905b892d79ce5a4013a7f1fb5-2370696918" });
