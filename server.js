@@ -10,7 +10,7 @@ const __dirname = path.resolve();
 const PORT = process.env.PORT || 3001;
 
 dotenv.config();
-const API_URL = "https://blak-reservas-ib2j.onrender.com";
+const API_URL = "https://blak-backend.onrender.com";
 const app = express();
 
 app.use(cors());
