@@ -10,7 +10,7 @@ const __dirname = path.resolve();
 const PORT = process.env.PORT || 3001;
 
 dotenv.config();
-const API_URL = "https://blak-backend.onrender.com";
+const API_URL = "https://blak-frontend.onrender.com";
 const app = express();
 
 app.use(
@@ -25,7 +25,6 @@ app.use(express.json());
 const client = new MercadoPagoConfig({ accessToken: "APP_USR-7045728362832938-040422-b215197905b892d79ce5a4013a7f1fb5-2370696918" });
 
 app.post("/create_preference", async (req, res) => {
-  console.log("📩 Solicitud recibida en /create_preference:", req.body);
   const preference = new Preference(client);
 
   try {
@@ -39,7 +38,7 @@ app.post("/create_preference", async (req, res) => {
           },
         ],
         payer: req.body.payer,
-        notification_url: `${API_URL}/webhook`,
+        notification_url: `https://blak-backend.onrender.com`,
         back_urls: {
           success: `${API_URL}/success`,
           failure: `${API_URL}/fail`,
@@ -49,11 +48,10 @@ app.post("/create_preference", async (req, res) => {
       },
     });
 
-    console.log("✅ Respuesta de Mercado Pago:", response);
     res.status(200).json({ init_point: response.init_point });
   } catch (error) {
-    console.error("❌ Error al crear preferencia:", error);
-    res.status(400).json({ error: "Error al crear preferencia" });
+    console.error("Error al crear preferencia:", error);
+    res.status(400).json(error);
   }
 });
 
