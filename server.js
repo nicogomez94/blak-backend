@@ -66,19 +66,30 @@ app.post("/webhook", async (req, res) => {
       const status = mpPayment.api_response.status;
 
       if (status == "200") {
-        const rawDesc = mpPayment.additional_info?.items?.[0]?.title || "";
+        const rawDesc = mpPayment.api_response.additional_info?.items?.[0]?.title || "";
         const email = "nicolasgomez94@gmail.com"; // hardcoded por ahora
         const token = crypto.randomBytes(16).toString("hex");
 
         let fecha = "";
         let servicios = [];
 
+        // Procesar la descripción formateada
         try {
-          const parsed = JSON.parse(rawDesc);
-          fecha = parsed.fecha;
-          servicios = parsed.servicios;
+          const lines = rawDesc.split("\n");
+          fecha = lines[0].replace("Fecha: ", "").trim();
+          servicios = lines.slice(2).map((line) => {
+            const match = line.match(/- (.+) \((.+)\): \$(\d+)/);
+            if (match) {
+              return {
+                nombre: match[1],
+                tamaño: match[2],
+                precio: parseInt(match[3], 10),
+              };
+            }
+            return null;
+          }).filter(Boolean);
         } catch (err) {
-          console.error("❌ No se pudo parsear la descripción:", rawDesc);
+          console.error("❌ No se pudo procesar la descripción:", rawDesc);
         }
 
         if (fecha) {
@@ -99,22 +110,17 @@ app.post("/webhook", async (req, res) => {
             fecha,
             status,
             token,
-            total: servicios.reduce((sum, servicio) => sum + (servicio.precio || 0), 0), // Calculate total
+            total: servicios.reduce((sum, servicio) => sum + (servicio.precio || 0), 0), // Calcular total
           });
 
           // Insertar servicios asociados
           for (const servicio of servicios) {
-            for (const [atributo, valor] of Object.entries(servicio)) {
-              if (atributo !== "nombre" && atributo !== "tamaño") {
-                await db("servicios").insert({
-                  reserva_id: reservaId[0], // Link to the reservation
-                  nombre: servicio.nombre,
-                  atributo,
-                  valor,
-                  tamaño: servicio.tamaño,
-                });
-              }
-            }
+            await db("servicios").insert({
+              reserva_id: reservaId[0], // Vincular con la reserva
+              nombre: servicio.nombre,
+              tamaño: servicio.tamaño,
+              precio: servicio.precio,
+            });
           }
 
           await enviarMailDeConfirmacion({ to: email, fecha });
@@ -130,11 +136,6 @@ app.post("/webhook", async (req, res) => {
     }
   }
 
-  res.sendStatus(200);
-});
-
-app.post("/webhook", (req, res) => {
-  console.log("📩 Notificación recibida de Mercado Pago:", req.body);
   res.sendStatus(200);
 });
 
