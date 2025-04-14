@@ -10,7 +10,7 @@ const __dirname = path.resolve();
 const PORT = process.env.PORT || 3001;
 
 dotenv.config();
-const API_URL = "https://blak-backend.onrender.com";
+const API_URL = "https://blak-frontend.onrender.com";
 const app = express();
 
 app.use(
@@ -38,7 +38,7 @@ app.post("/create_preference", async (req, res) => {
           },
         ],
         payer: req.body.payer,
-        notification_url: `${API_URL}/webhook`,
+        notification_url: `https://blak-backend.onrender.com`,
         back_urls: {
           success: `${API_URL}/success`,
           failure: `${API_URL}/fail`,
